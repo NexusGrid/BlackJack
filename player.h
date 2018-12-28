@@ -1,3 +1,5 @@
+//Copyright [player.h] [NexusGrid] Licensed under the Apache License, Version 2.0 (the «License»);
+
 #ifndef GAME_H
 #define GAME_H
 #define START_CASH 1000
@@ -10,11 +12,14 @@ public:
 	deck::card card1;
 	deck::card card2;
 	deck::card card3;
+	deck::card cardSplitLeft2;
+	deck::card cardSplitLeft3;
+	deck::card cardSplitRight2;
+	deck::card cardSplitRight3;
 	int money;
 	int set;
 	int handCost;
-	bool canSplit;
-	bool canDouble;
+	bool endSplit;
 
 	void cleanHand();
 	void drawMore(deck &Deck);

@@ -1,11 +1,7 @@
+//Copyright [mainwindow.cpp] [NexusGrid] Licensed under the Apache License, Version 2.0 (the «License»);
+
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
-#include "player.h"
-
-
-static deck Deck;
-static player Player;
-static player Dealer;
 
 void MainWindow::painter(QLabel &label, int value, int suit)
 {
@@ -470,8 +466,10 @@ void MainWindow::disabledButtons()
 
 void MainWindow::enabledButtons()
 {
+	ui->pushButton_SplitEnoughLeft->setEnabled(true);
+	ui->pushButton_SplitDrawRight->setEnabled(true);
+	ui->pushButton_SplitEnoughRight->setEnabled(true);
 	ui->pushButton_enough->setEnabled(true);
-	ui->pushButton_split->setEnabled(true);
 	ui->pushButton_double->setEnabled(true);
 	ui->pushButton_drawMore->setEnabled(true);
 	ui->pushButton_surrender->setEnabled(true);
@@ -494,7 +492,8 @@ void MainWindow::startGame()
 	ui->CardValuePlayerTotal->setNum(Player.handCost);
 	painter(*ui->handDealer1,Dealer.card1.value,Dealer.card1.suit);
 	ui->CardValueDealer1->setNum(Dealer.card1.cost);
-	painter(*ui->handDealer2,4,4);									//4 - номер рубашки, value в данном случае не имеет значения
+	painter(*ui->handDealer2,4,4);								//4 - номер рубашки, value в данном случае не имеет значения
+	if(Player.card1.cost == Player.card2.cost){ui->pushButton_split->setEnabled(true);}
 	if(Deck.deckBody.size() < (52 * DECK_NUMBER)/3){Deck.newDeck();}
 
 }
@@ -506,9 +505,16 @@ MainWindow::MainWindow(QWidget *parent) :
 {
 	ui->setupUi(this);
 	ui->output->setReadOnly(true);
-	ui->spinBox->setRange(150,START_CASH);
+	ui->spinBox->setRange(10,START_CASH);
 	ui->cash->setNum(Player.money);
 	this->disabledButtons();
+	ui->pushButton_SplitDrawLeft->setVisible(false);
+	ui->pushButton_SplitEnoughLeft->setVisible(false);
+	ui->pushButton_SplitDrawRight->setVisible(false);
+	ui->pushButton_SplitEnoughRight->setVisible(false);
+	ui->splitLeftValue->setVisible(false);
+	ui->splitRightValue->setVisible(false);
+
 }
 
 MainWindow::~MainWindow()
@@ -526,7 +532,7 @@ void MainWindow::on_pushButton_drawMore_clicked()
 	ui->CardValuePlayerTotal->setNum(Player.handCost);
 	if(Player.handCost > 21)
 	{
-		ui->output->setText("Вы проиграли,перебор!");
+		ui->output->append("Вы проиграли,перебор!");
 		ui->spinBox->setEnabled(true);
 		ui->cash->setNum(Player.money);
 		return;
@@ -540,10 +546,10 @@ void MainWindow::endGame()
 	ui->CardValueDealer2->setNum(Dealer.card2.cost);
 	Dealer.handCost = Dealer.card1.cost +  Dealer.card2.cost;
 	ui->CardValueDealerTotal->setNum(Dealer.handCost);
-	if(Player.handCost < Dealer.handCost)
+	if(Player.handCost < Dealer.handCost && Dealer.handCost <= 21)
 	{
-		ui->output->setText("Вы проиграли!");
-		ui->cash->setNum(Player.money);
+		ui->output->append("Вы проиграли!");
+		return;
 	}
 	if(Dealer.handCost < 17)
 	{
@@ -554,7 +560,7 @@ void MainWindow::endGame()
 		ui->CardValueDealerTotal->setNum(Dealer.handCost);
 		if(Dealer.handCost > 21)
 		{
-			ui->output->setText("Вы выиграли!");
+			ui->output->append("Вы выиграли!");
 			Player.money+= (Player.set * 3 / 2 );
 			ui->cash->setNum(Player.money);
 			return;
@@ -563,20 +569,20 @@ void MainWindow::endGame()
 	}
 	if(Player.handCost < Dealer.handCost)
 	{
-		ui->output->setText("Вы проиграли!");
+		ui->output->append("Вы проиграли!");
 		ui->cash->setNum(Player.money);
 		return;
 	}
 	if(Player.handCost > Dealer.handCost)
 	{
-		ui->output->setText("Вы выиграли!");
+		ui->output->append("Вы выиграли!");
 		Player.money+= (Player.set *  3 / 2);
 		ui->cash->setNum(Player.money);
 		return;
 	}
 	if(Player.handCost == Dealer.handCost)
 	{
-		ui->output->setText("Ничья!");
+		ui->output->append("Ничья!");
 		Player.money+= (Player.set);
 		ui->cash->setNum(Player.money);
 		return;
@@ -585,6 +591,11 @@ void MainWindow::endGame()
 
 void MainWindow::on_pushButton_newgame_clicked()
 {
+	foreach(QWidget* w,wVector)
+	{
+		w->~QWidget();
+	}
+	wVector.clear();
 	Player.cleanHand();
 	ui->handPlayer1->clear();
 	ui->handPlayer2->clear();
@@ -602,6 +613,12 @@ void MainWindow::on_pushButton_newgame_clicked()
 	ui->CardValueDealer3->clear();
 	ui->CardValueDealerTotal->clear();
 	ui->output->clear();
+	ui->pushButton_SplitDrawLeft->setVisible(false);
+	ui->pushButton_SplitEnoughLeft->setVisible(false);
+	ui->pushButton_SplitDrawRight->setVisible(false);
+	ui->pushButton_SplitEnoughRight->setVisible(false);
+	ui->splitLeftValue->setVisible(false);
+	ui->splitRightValue->setVisible(false);
 	this->enabledButtons();
 	this->startGame();
 }
@@ -624,4 +641,222 @@ void MainWindow::on_pushButton_double_clicked()
 	Player.money -= Player.set;
 	Player.set += Player.set;
 	on_pushButton_drawMore_clicked();
+}
+
+void MainWindow::on_pushButton_split_clicked()
+{
+	this->disabledButtons();
+	ui->splitLeftValue->setVisible(true);
+	ui->splitRightValue->setVisible(true);
+	ui->pushButton_SplitDrawLeft->setVisible(true);
+	ui->pushButton_SplitEnoughLeft->setVisible(true);
+	ui->pushButton_SplitDrawRight->setVisible(true);
+	ui->pushButton_SplitEnoughRight->setVisible(true);
+	Player.money -= Player.set;
+	ui->cash->setNum(Player.money);
+	Player.cardSplitLeft2 = Deck.drawCard();
+	Player.cardSplitRight2 = Deck.drawCard();
+	int leftHandCost = Player.card1.cost + Player.cardSplitLeft2.cost;
+	int rightHandCost = Player.card2.cost + Player.cardSplitRight2.cost;
+	QLabel *card1Left = new QLabel(this);
+	QLabel *card2Left = new QLabel(this);
+	QLabel *card1Right = new QLabel(this);
+	QLabel *card2Right = new QLabel(this);
+	wVector.push_back(card1Left);
+	wVector.push_back(card2Left);
+	wVector.push_back(card1Right);
+	wVector.push_back(card2Right);
+	card1Left->setGeometry(800,380,136,189);
+	card2Left->setGeometry(800,340,136,189);
+	card1Right->setGeometry(960,380,136,189);
+	card2Right->setGeometry(960,340,136,189);
+	card1Left->setStyleSheet("QLabel {"
+							 "border-style: solid;"
+							 "border-width: 1px;"
+							 "border-color: black; "
+							 "}");
+	card2Left->setStyleSheet("QLabel {"
+							 "border-style: solid;"
+							 "border-width: 1px;"
+							 "border-color: black; "
+							 "}");
+	card1Right->setStyleSheet("QLabel {"
+							 "border-style: solid;"
+							 "border-width: 1px;"
+							 "border-color: black; "
+							 "}");
+	card2Right->setStyleSheet("QLabel {"
+							 "border-style: solid;"
+							 "border-width: 1px;"
+							 "border-color: black; "
+							 "}");
+	painter(*card1Left,Player.card1.value,Player.card1.suit);
+	painter(*card2Left,Player.cardSplitLeft2.value,Player.cardSplitLeft2.suit);
+	painter(*card1Right,Player.card2.value,Player.card2.suit);
+	painter(*card2Right,Player.cardSplitRight2.value,Player.cardSplitRight2.suit);
+	card1Left->show();
+	card2Left->show();
+	card1Right->show();
+	card2Right->show();
+	ui->splitLeftValue->setNum(leftHandCost);
+	ui->splitRightValue->setNum(rightHandCost);
+}
+
+void MainWindow::on_pushButton_SplitDrawLeft_clicked()
+{
+	ui->pushButton_SplitDrawLeft->setDisabled(true);
+	ui->pushButton_SplitEnoughLeft->setDisabled(true);
+	Player.cardSplitLeft3 = Deck.drawCard();
+	QLabel *card3Left = new QLabel(this);
+	wVector.push_back(card3Left);
+	card3Left->setGeometry(800,300,136,189);
+	card3Left->setStyleSheet("QLabel {"
+							 "border-style: solid;"
+							 "border-width: 1px;"
+							 "border-color: black; "
+							 "}");
+	int leftHandCost = Player.card1.cost + Player.cardSplitLeft2.cost + Player.cardSplitLeft3.cost;
+	painter(*card3Left,Player.cardSplitLeft3.value,Player.cardSplitLeft3.suit);
+	ui->splitLeftValue->setNum(leftHandCost);
+	card3Left->show();
+	if(Player.endSplit)
+	{
+		this->endGameSplit();
+		return;
+	}
+	Player.endSplit = true;
+}
+
+void MainWindow::on_pushButton_SplitDrawRight_clicked()
+{
+	ui->pushButton_SplitDrawRight->setDisabled(true);
+	ui->pushButton_SplitEnoughRight->setDisabled(true);
+	Player.cardSplitRight3 = Deck.drawCard();
+	QLabel *card3Right = new QLabel(this);
+	wVector.push_back(card3Right);
+	card3Right->setGeometry(960,300,136,189);
+	card3Right->setStyleSheet("QLabel {"
+							 "border-style: solid;"
+							 "border-width: 1px;"
+							 "border-color: black; "
+							 "}");
+	int RightHandCost = Player.card2.cost + Player.cardSplitRight2.cost + Player.cardSplitRight3.cost;
+	painter(*card3Right,Player.cardSplitRight3.value,Player.cardSplitRight3.suit);
+	ui->splitRightValue->setNum(RightHandCost);
+	card3Right->show();
+	if(Player.endSplit)
+	{
+		this->endGameSplit();
+		return;
+	}
+	Player.endSplit = true;
+}
+
+void MainWindow::endGameSplit()
+{
+	bool leftHandLoose = false;
+	bool rightHandLoose = false;
+	int leftHandCost = Player.card1.cost + Player.cardSplitLeft2.cost + Player.cardSplitLeft3.cost;
+	int rightHandCost = Player.card2.cost + Player.cardSplitRight2.cost + Player.cardSplitRight3.cost;
+	painter(*ui->handDealer2,Dealer.card2.value,Dealer.card2.suit);
+	ui->CardValueDealer2->setNum(Dealer.card2.cost);
+	Dealer.handCost = Dealer.card1.cost +  Dealer.card2.cost;
+	ui->CardValueDealerTotal->setNum(Dealer.handCost);
+	if((leftHandCost < Dealer.handCost && Dealer.handCost <= 21) || (leftHandCost > 21 && Dealer.handCost <= 21))
+	{
+		ui->output->append("Вы проиграли в левой руке!");
+		leftHandLoose = true;
+	}
+	if((rightHandCost < Dealer.handCost && Dealer.handCost <= 21) || (rightHandCost > 21 && Dealer.handCost <= 21))
+	{
+		ui->output->append("Вы проиграли в правой руке!");
+		if(leftHandLoose){return;}
+		rightHandLoose = true;
+	}
+	if(Dealer.handCost < 17)
+	{
+		Dealer.card3 = Deck.drawCard();
+		Dealer.handCost += Dealer.card3.cost;
+		painter(*ui->handDealer3,Dealer.card3.value,Dealer.card3.suit);
+		ui->CardValueDealer3->setNum(Dealer.card3.cost);
+		ui->CardValueDealerTotal->setNum(Dealer.handCost);
+		if(Dealer.handCost > 21)
+		{
+			if(leftHandCost <= 21)
+			{
+				ui->output->append("Вы выиграли в левой руке!");
+				Player.money+= (Player.set * 3 / 2 );
+			}
+			if(rightHandCost <= 21)
+			{
+				ui->output->append("Вы выиграли в правой руке!");
+				Player.money+= (Player.set * 3 / 2 );
+			}
+			ui->cash->setNum(Player.money);
+			return;
+		}
+
+	}
+	if(leftHandCost < Dealer.handCost && !leftHandLoose)
+	{
+		ui->output->append("Вы проиграли в левой руке!");
+		if(rightHandLoose){return;}
+		leftHandLoose = true;
+	}
+	if(rightHandCost < Dealer.handCost && !rightHandLoose)
+	{
+		ui->output->append("Вы проиграли в правой руке!");
+		if(leftHandLoose){return;}
+		rightHandLoose = true;
+	}
+	if(leftHandCost > Dealer.handCost && !leftHandLoose)
+	{
+		ui->output->append("Вы выиграли в левой руке!");
+		Player.money+= (Player.set *  3 / 2);
+		ui->cash->setNum(Player.money);
+	}
+	if(rightHandCost > Dealer.handCost && !rightHandLoose)
+	{
+		ui->output->append("Вы выиграли в правой руке!");
+		Player.money+= (Player.set *  3 / 2);
+		ui->cash->setNum(Player.money);
+	}
+	if(leftHandCost == Dealer.handCost && !leftHandLoose)
+	{
+		ui->output->append("Ничья в левой руке!");
+		Player.money+= Player.set;
+		ui->cash->setNum(Player.money);
+	}
+	if(rightHandCost == Dealer.handCost && !rightHandLoose)
+	{
+		ui->output->append("Ничья в правой руке!");
+		Player.money+= Player.set;
+		ui->cash->setNum(Player.money);
+	}
+}
+
+void MainWindow::on_pushButton_SplitEnoughLeft_clicked()
+{
+	ui->pushButton_SplitDrawLeft->setDisabled(true);
+	ui->pushButton_SplitEnoughLeft->setDisabled(true);
+	Player.cardSplitLeft3.cost = 0;
+	if(Player.endSplit)
+	{
+		this->endGameSplit();
+		return;
+	}
+	Player.endSplit = true;
+}
+
+void MainWindow::on_pushButton_SplitEnoughRight_clicked()
+{
+	ui->pushButton_SplitDrawRight->setDisabled(true);
+	ui->pushButton_SplitEnoughRight->setDisabled(true);
+	Player.cardSplitRight3.cost = 0;
+	if(Player.endSplit)
+	{
+		this->endGameSplit();
+		return;
+	}
+	Player.endSplit = true;
 }
