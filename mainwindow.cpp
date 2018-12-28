@@ -468,6 +468,7 @@ void MainWindow::enabledButtons()
 {
 	ui->pushButton_SplitEnoughLeft->setEnabled(true);
 	ui->pushButton_SplitDrawRight->setEnabled(true);
+	ui->pushButton_SplitDrawLeft->setEnabled(true);
 	ui->pushButton_SplitEnoughRight->setEnabled(true);
 	ui->pushButton_enough->setEnabled(true);
 	ui->pushButton_double->setEnabled(true);
