@@ -1,6 +1,5 @@
 //Copyright [deck.cpp] [NexusGrid] Licensed under the Apache License, Version 2.0 (the «License»);
 
-#define DECK_NUMBER 6		//Колтчество полных обычных колод в конечной колоде
 
 #include "deck.h"
 #include <QStack>
@@ -10,7 +9,7 @@
 
 deck::deck()
 {
-
+	newDeck();
 }
 
 void deck::newDeck()
@@ -25,7 +24,8 @@ void deck::newDeck()
 			tempCard.value = i;
 			tempCard.suit = clubs;
 			if(i < 11){tempCard.cost = i;}
-			else if(i >= 11){tempCard.cost = 10;}
+			else if(i >= 11 && i < 14){tempCard.cost = 10;}
+			else if(i == 14){tempCard.cost = 11;}
 			temp.push_back(tempCard);
 		}
 	}
@@ -38,7 +38,8 @@ void deck::newDeck()
 			tempCard.value = i;
 			tempCard.suit = diamonds;
 			if(i < 11){tempCard.cost = i;}
-			else if(i >= 11){tempCard.cost = 10;}
+			else if(i >= 11 && i < 14){tempCard.cost = 10;}
+			else if(i == 14){tempCard.cost = 11;}
 			temp.push_back(tempCard);
 		}
 	}
@@ -51,7 +52,8 @@ void deck::newDeck()
 			tempCard.value = i;
 			tempCard.suit = hearts;
 			if(i < 11){tempCard.cost = i;}
-			else if(i >= 11){tempCard.cost = 10;}
+			else if(i >= 11 && i < 14){tempCard.cost = 10;}
+			else if(i == 14){tempCard.cost = 11;}
 			temp.push_back(tempCard);
 		}
 	}
@@ -64,7 +66,8 @@ void deck::newDeck()
 			tempCard.value = i;
 			tempCard.suit = spades;
 			if(i < 11){tempCard.cost = i;}
-			else if(i >= 11){tempCard.cost = 10;}
+			else if(i >= 11 && i < 14){tempCard.cost = 10;}
+			else if(i == 14){tempCard.cost = 11;}
 			temp.push_back(tempCard);
 		}
 	}
